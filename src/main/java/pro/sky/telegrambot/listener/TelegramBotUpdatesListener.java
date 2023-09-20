@@ -15,7 +15,6 @@ import java.util.List;
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-
     @Autowired
     private TelegramBot telegramBot;
 
@@ -29,6 +28,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
             // Process your updates here
+            update.message().text();
+            update.message().chat().id();
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
