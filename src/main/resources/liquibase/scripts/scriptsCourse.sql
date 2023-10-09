@@ -1,3 +1,3 @@
 --liquibase formatted sql
---changeset dgaraev:createFirstTable
-create table chat(id serial primary key, notification text, date_and_time timestamp);
+--changeset dgaraev:createTable
+create table notification_tasks(id bigserial primary key, notification text, date_and_time timestamp);

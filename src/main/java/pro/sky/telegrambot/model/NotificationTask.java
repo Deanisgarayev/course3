@@ -7,20 +7,19 @@ import javax.persistence.Id;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Entity
+@Entity(name = "notification_tasks")
 public class NotificationTask {
     public NotificationTask() {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private String notification;
-    private LocalDateTime dataAndTime;
-    public NotificationTask(long id,  String notification, LocalDateTime dataAndTime) {
+    private LocalDateTime dateAndTime;
+    public NotificationTask(long id,  String notification, LocalDateTime dateAndTime) {
         this.id = id;
         this.notification = notification;
-        this.dataAndTime = dataAndTime;
+        this.dateAndTime = dateAndTime;
     }
 
     public long getId() {
@@ -40,11 +39,11 @@ public class NotificationTask {
     }
 
     public LocalDateTime getDataAndTime() {
-        return dataAndTime;
+        return dateAndTime;
     }
 
-    public void setDataAndTime(LocalDateTime dataAndTime) {
-        this.dataAndTime = dataAndTime;
+    public void setDataAndTime(LocalDateTime dateAndTime) {
+        this.dateAndTime = dateAndTime;
     }
 
     @Override
@@ -52,12 +51,12 @@ public class NotificationTask {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NotificationTask that = (NotificationTask) o;
-        return id == that.id && Objects.equals(notification, that.notification) && Objects.equals(dataAndTime, that.dataAndTime);
+        return id == that.id && Objects.equals(notification, that.notification) && Objects.equals(dateAndTime, that.dateAndTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, notification, dataAndTime);
+        return Objects.hash(id, notification, dateAndTime);
     }
 
     @Override
@@ -65,7 +64,7 @@ public class NotificationTask {
         return "NotificationTask{" +
                 "id=" + id +
                 ", notification='" + notification + '\'' +
-                ", dataAndTime=" + dataAndTime +
+                ", dateAndTime=" + dateAndTime +
                 '}';
     }
 }
