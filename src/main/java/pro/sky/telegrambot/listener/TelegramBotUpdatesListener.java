@@ -3,18 +3,33 @@ package pro.sky.telegrambot.listener;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.model.NotificationTask;
+import pro.sky.telegrambot.repository.NotificationTaskRepository;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    NotificationTaskRepository notificationTaskRepository;
+    @Autowired
+    public TelegramBotUpdatesListener(NotificationTaskRepository notificationTaskRepository) {
+        this.notificationTaskRepository = notificationTaskRepository;
+    }
 
     @Autowired
     private TelegramBot telegramBot;
@@ -28,9 +43,54 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-            // Process your updates here
+            if (update.message().text().equals("/start")) {
+                SendMessage message = new SendMessage(update.message().chat().id(), "Hi");
+                telegramBot.execute(message);
+            }
+                extraProcess(updates);
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
+    public List<NotificationTask>notifications(LocalDateTime time) {
+        List<NotificationTask> notificationTaskList = notificationTaskRepository.findAll();
+        notificationTaskRepository.findAll().forEach(times->{
+            if (time.equals(times)) {
+                notificationTaskList.add(times);
+            }
+        });
+        return notificationTaskList;
+    }
+    @Scheduled(cron = "0 0/1 * * * *")
+    public void scheduleNotification() {
+        List<NotificationTask>notificationTaskList=this.notifications(LocalDateTime.now()
+                .truncatedTo(ChronoUnit.MINUTES));
+        this.scheduleNotificationMassage(notificationTaskList);
+    }
+    public void scheduleNotificationMassage(List<NotificationTask>notificationTaskList){
+        notificationTaskList.forEach(notificationTask -> {
+            SendMessage sendMessage = new SendMessage(notificationTask.getId(),
+                    notificationTask.getNotification());
+            telegramBot.execute(sendMessage);
+        });
+    }
+
+    public int extraProcess(List<Update> updates) {
+        updates.forEach(update -> {
+            logger.info("Processing update: {}", update);
+            Pattern pattern = Pattern.compile("([\\d.:\\s]{16})\\s+(.+)");
+            Matcher matcher = pattern.matcher(update.message().text());
+            if (matcher.matches()) {
+                String time = matcher.group(1);
+                LocalDateTime times = LocalDateTime.parse(time,
+                        DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+                String notes = matcher.group(2);
+                NotificationTask notificationTask = new NotificationTask(update
+                        .message()
+                        .chat().id(), notes, times);
+                notificationTaskRepository.save(notificationTask);
+            }
+        });
+        return UpdatesListener.CONFIRMED_UPDATES_ALL;
+    }
 }
